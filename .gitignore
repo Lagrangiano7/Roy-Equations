@@ -1,2 +1,7 @@
 *.out
 Mathematica
+Diario.ipynb
+Tema 1 Causality.ipynb
+fort.*
+.ipynb_checkpoints
+main/params

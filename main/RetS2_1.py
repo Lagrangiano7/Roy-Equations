@@ -5,49 +5,41 @@ from kernels import sth, s2
 import t
 import matplotlib.pyplot as plt
 from scipy.interpolate import PchipInterpolator
-from Regge import reader
-from gaussxw import gaussxwab
+from Regge import Regge
 
 eps=1e-6
-wave_ord = np.delete(t.waves_1, 5)
-K_ord = kernels.getS2()
-STS2 = lambda s: kernels.ST_S2(s, kernels.a00_1_t, kernels.a20_1_t)
 
-N=10
-NInterv = 20
+KT_waves = [t.t00_1, t.t11_1] # S0, P
+DT_waves = [t.t02_1, t.t04_1, t.t13_1, t.t22_1, t.t24_1] # D0, G0, F, D2, G2
 
-x100_1, w100_1 = gaussxwab(N, sth+eps, 4/5*s2)
-
-interv = np.linspace(4/5*s2, s2, NInterv)
-
-xs = [x100_1]
-ws = [w100_1]
-h = s2 - 4/5*s2
-
-for i in range(len(interv)):
-    x, w = gaussxwab(N, 4/5*s2+h*i/NInterv, 4/5*s2 + h*(i+1)/NInterv)
-    xs.append(x)
-    ws.append(w)
+KT = [kernels.K2000, kernels.K2011] # S0, P
+DT = [kernels.K2002, kernels.K2004, kernels.K2013, kernels.K2022, kernels.K2024] # D0, G0, F, D2, G2
+STS2 = lambda s: kernels.ST_S2(s, kernels.a00_1, kernels.a20_1)
 
 # Interpolating parametrizations for shorter integration time
 
-sp_grid = np.linspace(sth+eps, s2, 1500)
+sp_grid = np.linspace(sth+eps, s2, 400)
 
-# Diagonal (t00)
+# Diagonal (t20)
 Im_t20_vals = np.array([t.t20_1(sp).imag for sp in sp_grid])
 Im_t20_interp = PchipInterpolator(sp_grid, Im_t20_vals)
 
 # Ondas no diagonales
-Im_interp = []
-for i in range(len(K_ord)):
-    vals = np.array([wave_ord[i](sp).imag for sp in sp_grid])
-    Im_interp.append(PchipInterpolator(sp_grid, vals))
+Im_interp_KT = []
+Im_interp_DT = []
+for wave in KT_waves:
+    vals = np.array([wave(sp).imag for sp in sp_grid])
+    Im_interp_KT.append(PchipInterpolator(sp_grid, vals))
+
+for wave in DT_waves:
+    vals = np.array([wave(sp).imag for sp in sp_grid])
+    Im_interp_DT.append(PchipInterpolator(sp_grid, vals))
 
 # =========================================================
 
 
 def ReT20(s):
-    # S0 -> S0
+    # KT (S0, P, S2)
     cauchy_kern = lambda sp: kernels.K2020_cauchy(s, sp) * Im_t20_interp(sp)
     cauchy_rest = lambda sp: kernels.K2020_rest(s, sp) * Im_t20_interp(sp)
 
@@ -57,29 +49,40 @@ def ReT20(s):
         weight="cauchy",
         wvar=s,
         limit=200
+    )[0] + integrate.quad(
+        cauchy_rest,
+        sth+eps, s2,
+        limit=200
     )[0]
 
-    for i in range(len(xs)):
-        for j in range(N):
-            total_diag += ws[i][j]*cauchy_rest(xs[i][j])
+    KT_contrib = total_diag
+    for i in range(len(KT)):
+        integrand = lambda sp: KT[i](s, sp) * Im_interp_KT[i](sp)
+        KT_contrib += integrate.quad(
+            integrand,
+            sth+eps, s2,
+            limit=200
+            )[0]
 
-    # Rest -> S0
-    total_rest = 0
-    for i in range(len(K_ord)):
-        integrand = lambda sp: K_ord[i](s, sp) * Im_interp[i](sp)
-        for j in range(len(xs)):
-            for k in range(N):
-                total_diag += ws[j][k]*integrand(xs[j][k])
+    # DT
+    DT_contrib = 0
+    for i in range(len(DT)):
+        integrand = lambda sp: DT[i](s, sp) * Im_interp_DT[i](sp)
+        DT_contrib += integrate.quad(
+            integrand,
+            sth+eps, s2,
+            limit=200
+            )[0]
     
-    return STS2(s) + total_diag + total_rest
+    return (STS2(s), KT_contrib, DT_contrib)
 
 
 # =========================================================
 
-x1 = np.linspace(np.sqrt(sth+1e-3), np.sqrt(68)*kernels.mpi, 600)
+""" x1 = np.linspace(np.sqrt(sth+1e-3), np.sqrt(68)*kernels.mpi, 600)
 
 y_teoLo100 = np.array(list(map(lambda s: ReT20(s**2), x1)))
-y_ReggeHI = np.array(list(map(lambda s: reader.getWave("S2")(s**2), x1)))
+y_ReggeHI = np.array(list(map(lambda s: Regge.Ret20(s**2), x1)))
 
 y_teo100 = y_teoLo100 + y_ReggeHI
 y_param = list(map(lambda s: t.t20_1(s**2).real, x1))
@@ -93,9 +96,51 @@ Ret00_Jacobo_param = raw[:,2]
 plt.plot(x, Ret00_Jacobo_disp, label="Dispersivo Jacobo")
 
 
-plt.plot(x1, y_teo100, label="Roy (N=200)")
+plt.plot(x1, y_teo100, label="Roy")
 plt.plot(x1, y_param, label="Parametrización")
 plt.xlabel("$\\sqrt{s}$ (GeV)")
-plt.ylabel("Re t11(s)")
+plt.ylabel("Re t20(s)")
 plt.legend()
-plt.show()
+plt.show() """
+
+raw = np.loadtxt("fort.42")
+
+E = raw[:,0]/1000
+ST_Jac = raw[:,1]
+KT_Jac = raw[:,2]
+DT_Jac = raw[:,3]
+Regge_Jac = raw[:,4]
+
+ST_Ger = []
+KT_Ger = []
+DT_Ger = []
+
+for val in E:
+    Ger = ReT20(val**2)
+    ST_Ger.append(Ger[0])
+    KT_Ger.append(Ger[1])
+    DT_Ger.append(Ger[2])
+
+Regge_Ger = list(map(lambda s: Regge.Ret20(s**2), E))
+
+with open("S2_Xray.txt", "w") as f:
+    f.write("S2 WAVE COMPARISON\n\n")
+    f.write("-------------\n")
+    f.write("Subtraction term\n")
+    for i in range(len(E)):
+        f.write(f"{np.round(E[i], 4)}          {ST_Jac[i]}          {ST_Ger[i]}\n")
+    
+    f.write("\n-------------\n")
+    f.write("Kernel contribs (S0 + P + S2)\n")
+    for i in range(len(E)):
+        f.write(f"{np.round(E[i], 4)}          {KT_Jac[i]}          {KT_Ger[i]}\n")
+
+    f.write("\n-------------\n")
+    f.write("Driving term contribs (D0 + G0 + F + D2 + G2)\n")
+    for i in range(len(E)):
+        f.write(f"{np.round(E[i], 4)}          {DT_Jac[i]}          {DT_Ger[i]}\n")
+    
+    f.write("\n-------------\n")
+    f.write("Regge contrib\n")
+    for i in range(len(E)):
+        f.write(f"{np.round(E[i], 4)}          {Regge_Jac[i]}          {Regge_Ger[i]}\n")

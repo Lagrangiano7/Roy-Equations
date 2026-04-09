@@ -1,47 +1,37 @@
 # 1. Introduction
 
-- Broad objective: I want to study hadronic Physics at low energies, particularly pion-pion scattering
-- Precise objective: reduce the truncation error in the partial wave expansion of T by calculating up to G-wave contributions + study the stability / convergence of T when changing the wave at which I truncate
+- Objective: I want to study the Physics of pions. Characterizing their dynamics is so very important to understand the dynamics of other processes such as heavy meson decays or any interaction involving well defined 0, 1, 2 isospin channels
+- Problem: we cannot procede with perturbative QCD because at low energies, QCD turns non-perturbative
+    - Many ways to deal with this but I shall be using dispersive methods
+    - Talk about the axiomatic approach to Physics: imposing a set of axioms which we believe to hold true, we can build a theory which is self-consistent and must yield the correct results if said axioms do indeed hold
 
-- Problem: QCD is non-perturbative in this regime (talk about confinement)
+# 2. An introduction to hadrons
 
-- Solutions:
-    1. LQCD: very resource-expensive
-    2. ChiPT: you need to choose an order in perturbation theory and calibration is nontrivial
-    3. Dispersive methods: you start with some basic axioms and then build from consistency --> model independent!
+- Objective of this section: to give an understanding of the actual physical object whose dynamics we shall be studying
 
-# 2. An intro to scattering
-
-- S matrix in QM and QFT
-- Relationship with invariant amplitude (remark this can't be obtained with perturbative QCD in this regime)
-- Mandelstam variables and on-shell condition
-- Link: we shall now see T obeys a so-called dispersion relation
+- Talk about QCD a bit phenomenologically
+- Talk about quarks, how they are confined into hadrons, about the light meson octet and about pions
+- A deeper dive into pions: isospin limit as motivated by Heisenberg --> isospin limit and isospin breaking --> maybe mention they are the Goldstone bosons associated to the spontaneous breaking of the chiral symmetry in 2 flavours + Adler's theorem for suppressed interaction
+- At low energies (below hadronic scale), QCD is non-perturbative in its coupling constant and therefore one cannot treat the study of pions at low energies with this tool --> how do we proceed? --> Dispersive methods
 
 # 3. An intro to dispersive methods
 
-- First dispersion relations: Kramers-Krönig
-- They first appeared in the 60s, before we had a theory for the strong interaction, and have recently gained attention again because one can use them to verify whether the chiral condensate is indeed the LO term in ChiPT (it is) and also useful as a bridge between theory and experiment
-- Also interesting on their own: they allow us to test whether the first principles we believe to be true actually hold
-- What is a dispersion relation?: introduce close relationship between causality and analyticity as in Causality and Dispersion Relations
-- Titchmarsh theorem and Plemelj formulae
-- Explain subtraction terms (Causality and DRs)
-- Deriving dispersion relation for T (until 1.131 in thesis)
-    - Imposing unitarity
-    - Imposing Mandelstam hypothesis --> explain poles in real axis and branch cuts
-    - Analytical continuation for in "s" from Schwartz reflection principle
-    - It now makes sense to talk about dispersion relations for T and one can recover the physical region (in s-channel) as stated by Titchmarsh theorem
-    - IMPORTANT: left branch cut does not correspond to physical region and we don't know what happens there --> fix it by re-expressing its contribution in terms of the right branch cut!
+- Objective of this section: to derive the dispersion relations for $T$ of 2->2 scattering process and explain the theory underlying them
+- Preview: give intuition of what a dispersion relations actually does --> make analogy with Kramers-Kronig (the idea is the same althopugh the interpretation is different, since it is now a probability amplitude)
+- Talk about invariant amplitude and connection to S matrix --> instead of obtaining it with Feynman diagrams, we calculate it exactly and in a model-independent way (this was developed in the 60s, before we had a theory for QCD)
+- Beginning of explanation of dispersion relations:
+    - We impose:
+          - Unitarity: if we begin with a given asimptotic state, we must end in another one --> $\displaystyle\sum_\beta |\langle \alpha |S |\beta\rangle|^2=\displaystyle\sum_\beta |\langle \alpha |S |\beta\rangle\langle \beta S^\dagger |\alpha\rangle = \langle \alpha SS^\dagger |\alpha \rangle$ and this must be equal to the normalization --> explore the consequences of unitarity --> optical theorem and imaginary part gives scattering amplitude
+          - Lorentz invariance: Einstein's principle of relativity: (in the absence of gravity) the laws of Physics are the same for all inertial frames of reference --> all (intertial) observers must agree on what the probability amplitude of a given process is: $\langle \alpha|S|\beta\rangle$ must be a scalar. We choose the Lorentz-invariant normalization and demand $S$ to be a Lorentz scalar so that $T'=T$
+          - Analyticity
+          - Causality --> strongly linked through Hilbert transform
+    - Introduce Mandesltam variables and Mandelstam triangle
+    - Promote "s" to complex variable --> explain how different sections of the complex plane connect to real Physics in different channels (this is crossing, enabled by time reversal invariance)
+    - Explain analytical structure through Mandelstam hypothesis
 
 # 4. Narrowing down: pion scattering with Roy eqns.
 
 - B. Ananthanarayan calls it "the theoretician's paradise" because ChiPT converges very well in it
-- What is a pion?
-    - Quark content
-    - Pions are the Goldstone bosons of QCD at chiral limit
-        - In chiral limit (with only 2 quarks) we have SU(2)xSU(2)xU(1)global symmetry (axial singlet has anomaly) --> we have 1 singlet vector current + 3 vector currents + 3 axial currents, all conserved, but 3 vector currents are spontaneously broken --> 3 Goldstone bosons, the pions (since 2 flavour isospin is a very good approx., pions are closer to being Goldstone bosons than other mesons which are Goldstones with 3 flavours --> this makes them much lighter than the rest of mesons and also makes SU(2) ChiPT converge much faster than SU(3) ChiPT)
-        - If we introduced different masses for each quark flavour --> chiral symmetry explicitly broken
-        - But if we introduce them with the same mass (very good approx for u, d) --> chiral symmetry is restored, but axial currents are no longer conserved (say that by conserved you mean Ward-Takahashi identity holds to 0)
-        - Vector currents are still conserved but spontaneously broken --> we have massive "quasi-Goldstones" --> the pions. They do not acquire their mass from the Higgs mechanism, which is a spontaneous breaking of a gauge symmetry, but instead from the spontaneous breaking of a global symmetry!
 - Changing basis: ideal for 2->2 scattering is to work in coupled isospin basis
 - How do these new amplitudes relate to those of the uncoupled basis? --> Crossing matrices
 - Link with 2: these relationships are true for every channel and in particular for well-defined isospin channels (quote thesis)
