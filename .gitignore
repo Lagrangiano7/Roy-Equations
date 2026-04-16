@@ -5,3 +5,4 @@ main/fort.*
 .ipynb_checkpoints/
 main/params/
 Written/
+*.txt

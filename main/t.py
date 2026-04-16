@@ -13,12 +13,9 @@ import params.f_new_1_unit as params1_f1
 import params.g0_unit_new as params1_g0
 import params.g2_pw_try as params1_g2
 
-f=open('params/monteKmod_sol1_def.in',"r") # Params from constrained
-lines=f.readlines()
-par=[] # Exctract all params in file (CONSTRAINED)
-for x in lines:
-    par.append(float(x.split()[0]))
-f.close()
+raw = np.loadtxt("params/monteKmod_sol1_def.in", comments="|")
+par = raw[:,0]
+err_par = raw[:,1]
 
 
 # Selecting indices to slice global parameter array
@@ -40,6 +37,15 @@ par_d2_1=np.take(par, par_d2_in)
 par_f1_1=np.take(par, par_f1_in)
 par_g0_1=np.take(par, par_g0_in)
 par_g2_1=np.take(par, par_g2_in)
+
+err_par_s0_1=np.take(err_par, par_s0_in)
+err_par_s2_1=np.take(err_par, par_s2_in)
+err_par_p1_1 = np.take(err_par, par_p1_in)
+err_par_d0_1=np.take(err_par, par_d0_in)
+err_par_d2_1=np.take(err_par, par_d2_in)
+err_par_f1_1=np.take(err_par, par_f1_in)
+err_par_g0_1=np.take(err_par, par_g0_in)
+err_par_g2_1=np.take(err_par, par_g2_in)
 
 # Building parametrizations from first param. set
 
