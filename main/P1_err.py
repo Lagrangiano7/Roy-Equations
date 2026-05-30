@@ -433,15 +433,13 @@ print(np.where(M==0.0))
 
 errs = np.sqrt(np.sum(M**2, axis=0))
 
-up = eval_original + errs
-down = eval_original - errs
-
-np.savetxt("P_bands.txt", np.column_stack([x1, eval_original, [t.t11_1(val).real for val in x1**2] + errs, [t.t11_1(val).real for val in x1**2] - errs]))
+up = param_original + errs
+down = param_original - errs
 
 # Plotting with error band
 
-plt.plot(x1, eval_original, label="Roy", color="blue")
-plt.plot(x1, param_original, label="Parametrization", color="red")
+plt.plot(x1, eval_original, label="Roy", color="red")
+plt.plot(x1, param_original, label="Parametrization", color="blue")
 
 plt.fill_between(
     x1,

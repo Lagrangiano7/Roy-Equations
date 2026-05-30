@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import util.interp as interp
 from Regge import Regge
 
-### Calculating Delta_0 = Ret00-Param00 without changing any parameters
+### Calculating Delta_0 = Ret22-Param22 without changing any parameters
 
 eps=1e-6
-N_pts = 200 # number of points we use to evaluate the function. More ==> smoother curve but higher execution time
+N_pts = 50 # number of points we use to evaluate the function. More ==> smoother curve but higher execution time
                                                               # Less than 30 ==> fast but unreliable
 
 
@@ -18,13 +18,11 @@ N_pts = 200 # number of points we use to evaluate the function. More ==> smoothe
 
 sp_grid = np.linspace(sth+eps, s2, 400)
 
-# Calculating D0 = param00 - Ret00 (without changing any parameters)
+# Calculating D_original = param22 - Ret22 (without changing any parameters)
 
 x1 = np.linspace(np.sqrt(sth+1e-3), np.sqrt(68)*k.mpi, N_pts) # sqrt(s)
 
-STS0 = np.array(list(map(lambda s: k.ST_S0(s**2, k.a00_1, k.a20_1), x1)))
-
-# Evaluating by contributions in all 30 points of s grid
+# Evaluating by contributions in all 50 points of s grid
 S0, D0, G0, P, F, S2, D2, G2 = [np.zeros(N_pts) for _ in range(8)]
 
 # Ordinary (unaltered) interpolations
@@ -39,14 +37,14 @@ Im_t22_interp = interp.getInterp(t.t22_1, sp_grid)
 Im_t24_interp = interp.getInterp(t.t24_1, sp_grid)
 
 for (i, s) in enumerate(x1**2):
-    S0_contrib = integrate.quad(lambda sp: k.K0000_cauchy(s, sp)*Im_t00_interp(sp), sth+eps, s2, weight="cauchy", wvar=s, limit=200)[0] + integrate.quad(lambda sp: k.K0000_rest(s, sp)*Im_t00_interp(sp), sth+eps, s2, limit=200)[0]
-    D0_contrib = integrate.quad(lambda sp: k.K0002(s, sp)*Im_t02_interp(sp), sth+eps, s2, limit=200)[0]
-    G0_contrib = integrate.quad(lambda sp: k.K0004(s, sp)*Im_t04_interp(sp), sth+eps, s2, limit=200)[0]
-    P_contrib = integrate.quad(lambda sp: k.K0011(s, sp)*Im_t11_interp(sp), sth+eps, s2, limit=200)[0]
-    F_contrib = integrate.quad(lambda sp: k.K0013(s, sp)*Im_t13_interp(sp), sth+eps, s2, limit=200)[0]
-    S2_contrib = integrate.quad(lambda sp: k.K0020(s, sp)*Im_t20_interp(sp), sth+eps, s2, limit=200)[0]
-    D2_contrib = integrate.quad(lambda sp: k.K0022(s, sp)*Im_t22_interp(sp), sth+eps, s2, limit=200)[0]
-    G2_contrib = integrate.quad(lambda sp: k.K0024(s, sp)*Im_t24_interp(sp), sth+eps, s2, limit=200)[0]
+    S0_contrib = integrate.quad(lambda sp: k.K2200(s, sp)*Im_t00_interp(sp), sth+eps, s2, limit=200)[0]
+    D0_contrib = integrate.quad(lambda sp: k.K2202(s, sp)*Im_t02_interp(sp), sth+eps, s2, limit=200)[0]
+    G0_contrib = integrate.quad(lambda sp: k.K2204(s, sp)*Im_t04_interp(sp), sth+eps, s2, limit=200)[0]
+    P_contrib = integrate.quad(lambda sp: k.K2211(s, sp)*Im_t11_interp(sp), sth+eps, s2, limit=200)[0]
+    F_contrib = integrate.quad(lambda sp: k.K2213(s, sp)*Im_t13_interp(sp), sth+eps, s2, limit=200)[0]
+    S2_contrib = integrate.quad(lambda sp: k.K2220(s, sp)*Im_t20_interp(sp), sth+eps, s2, limit=200)[0]
+    D2_contrib = integrate.quad(lambda sp: k.K2222_cauchy(s, sp)*Im_t22_interp(sp), sth+eps, s2, weight="cauchy", wvar=s, limit=200)[0] + integrate.quad(lambda sp: k.K2222_rest(s, sp)*Im_t22_interp(sp), sth+eps, s2, limit=200)[0]
+    G2_contrib = integrate.quad(lambda sp: k.K2224(s, sp)*Im_t24_interp(sp), sth+eps, s2, limit=200)[0]
 
     S0[i] = S0_contrib
     D0[i] = D0_contrib
@@ -57,11 +55,11 @@ for (i, s) in enumerate(x1**2):
     D2[i] = D2_contrib
     G2[i] = G2_contrib
 
-Roy_original = STS0+S0+D0+G0+P+F+S2+D2+G2
-Regge_original = np.array(list(map(lambda s: Regge.Ret00(s**2), x1)))
+Roy_original = S0+D0+G0+P+F+S2+D2+G2
+Regge_original = np.array(list(map(lambda s: Regge.Ret22(s**2), x1)))
 
 eval_original = Roy_original + Regge_original
-param_original = np.array(list(map(lambda s: t.t00_1(s**2).real, x1)))
+param_original = np.array(list(map(lambda s: t.t22_1(s**2).real, x1)))
 
 D_original = eval_original - param_original # Residue of Roy with respect to parametrization for all "s" values. No params changed.
 
@@ -81,12 +79,8 @@ par_s0_1 = t.par_s0_1.copy()
 err_par_s0_1 = t.err_par_s0_1.copy()
 S0_plus = np.zeros(N_pts)
 S0_minus = np.zeros(N_pts)
-STS0_plus = np.zeros(N_pts)
-STS0_minus = np.zeros(N_pts)
 
-eval_tochange = Roy_original - STS0 - S0 + Regge_original
-
-# Change ST because it goes with a00 and a20 --> Ret00(sth) and Ret20(sth)
+eval_tochange = Roy_original - S0 + Regge_original
 
 for i in range(len(par_s0_1)):
     print(i)
@@ -96,26 +90,18 @@ for i in range(len(par_s0_1)):
     par_minus = par_s0_1.copy()
     par_minus[i] -= err_par_s0_1[i]
 
-    t00_plus = lambda s: t.params1_s0.tf(s, par_plus)
-    t00_minus = lambda s: t.params1_s0.tf(s, par_minus)
-
-    a00_plus = t00_plus(sth+1e-6).real
-    a00_minus = t00_minus(sth+1e-6).real
-
-    Im_t00_plus_interp = interp.getInterp(t00_plus, sp_grid)
-    Im_t00_minus_interp = interp.getInterp(t00_minus, sp_grid)
+    Im_t00_plus_interp = interp.getInterp(lambda s: t.params1_s0.tf(s, par_plus), sp_grid)
+    Im_t00_minus_interp = interp.getInterp(lambda s: t.params1_s0.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        S0_plus[j] = integrate.quad(lambda sp: k.K0000_cauchy(s, sp)*Im_t00_plus_interp(sp), sth+eps, s2, weight="cauchy", wvar=s, limit=200)[0] + integrate.quad(lambda sp: k.K0000_rest(s, sp)*Im_t00_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        S0_minus[j] = integrate.quad(lambda sp: k.K0000_cauchy(s, sp)*Im_t00_minus_interp(sp), sth+eps, s2, weight="cauchy", wvar=s, limit=200)[0] + integrate.quad(lambda sp: k.K0000_rest(s, sp)*Im_t00_minus_interp(sp), sth+eps, s2, limit=200)[0]
-        STS0_plus[j] = k.ST_S0(s, a00_plus, k.a20_1)
-        STS0_minus[j] = k.ST_S0(s, a00_minus, k.a20_1)
+        S0_plus[j] = integrate.quad(lambda sp: k.K2200(s, sp)*Im_t00_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        S0_minus[j] = integrate.quad(lambda sp: k.K2200(s, sp)*Im_t00_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
-    eval_plus = eval_tochange + S0_plus + STS0_plus
-    eval_minus = eval_tochange + S0_minus + STS0_minus
+    eval_plus = eval_tochange + S0_plus
+    eval_minus = eval_tochange + S0_minus
     
-    D_plus = eval_plus - [t00_plus(s).real for s in x1**2] # New param with +1sigma
-    D_minus = eval_minus - [t00_minus(s).real for s in x1**2] # New param with -1sigma
+    D_plus = eval_plus - param_original
+    D_minus = eval_minus - param_original
 
     delta_plus = np.abs(D_plus-D_original)
     delta_minus = np.abs(D_minus-D_original)
@@ -124,7 +110,7 @@ for i in range(len(par_s0_1)):
 
 counter += len(par_s0_1)
 
-################ t11: recalculate only P
+################ t11: recalculate only P (diagonal)
 
 par_p_1 = t.par_p1_1.copy()
 err_par_p_1 = t.err_par_p1_1.copy()
@@ -145,14 +131,15 @@ for i in range(len(par_p_1)):
     Im_t11_minus_interp = interp.getInterp(lambda s: t.params1_p1.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        P_plus[j] = integrate.quad(lambda sp: k.K0011(s, sp)*Im_t11_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        P_minus[j] = integrate.quad(lambda sp: k.K0011(s, sp)*Im_t11_minus_interp(sp), sth+eps, s2, limit=200)[0]
+        P_plus[j] = integrate.quad(lambda sp: k.K2211(s, sp)*Im_t11_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        P_minus[j] = integrate.quad(lambda sp: k.K2211(s, sp)*Im_t11_minus_interp(sp), sth+eps, s2, limit=200)[0]
+
 
     eval_plus = eval_tochange + P_plus
     eval_minus = eval_tochange + P_minus
     
-    D_plus = eval_plus - param_original
-    D_minus = eval_minus - param_original
+    D_plus = eval_plus - param_original # New param with +1sigma
+    D_minus = eval_minus - param_original # New param with -1sigma
 
     delta_plus = np.abs(D_plus-D_original)
     delta_minus = np.abs(D_minus-D_original)
@@ -182,14 +169,14 @@ for i in range(len(par_d0_1)):
     Im_t02_minus_interp = interp.getInterp(lambda s: t.params1_d0.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        D0_plus[j] = integrate.quad(lambda sp: k.K0002(s, sp)*Im_t02_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        D0_minus[j] = integrate.quad(lambda sp: k.K0002(s, sp)*Im_t02_minus_interp(sp), sth+eps, s2, limit=200)[0]
+        D0_plus[j] = integrate.quad(lambda sp: k.K2202(s, sp)*Im_t02_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        D0_minus[j] = integrate.quad(lambda sp: k.K2202(s, sp)*Im_t02_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
     eval_plus = eval_tochange + D0_plus
     eval_minus = eval_tochange + D0_minus
     
-    D_plus = eval_plus - param_original
-    D_minus = eval_minus - param_original
+    D_plus = eval_plus - param_original # New param with +1sigma
+    D_minus = eval_minus - param_original # New param with -1sigma
 
     delta_plus = np.abs(D_plus-D_original)
     delta_minus = np.abs(D_minus-D_original)
@@ -219,8 +206,8 @@ for i in range(len(par_g0_1)):
     Im_t04_minus_interp = interp.getInterp(lambda s: t.params1_g0.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        G0_plus[j] = integrate.quad(lambda sp: k.K0004(s, sp)*Im_t04_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        G0_minus[j] = integrate.quad(lambda sp: k.K0004(s, sp)*Im_t04_minus_interp(sp), sth+eps, s2, limit=200)[0]
+        G0_plus[j] = integrate.quad(lambda sp: k.K2204(s, sp)*Im_t04_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        G0_minus[j] = integrate.quad(lambda sp: k.K2204(s, sp)*Im_t04_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
     eval_plus = eval_tochange + G0_plus
     eval_minus = eval_tochange + G0_minus
@@ -256,8 +243,8 @@ for i in range(len(par_f_1)):
     Im_t13_minus_interp = interp.getInterp(lambda s: t.params1_f1.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        F_plus[j] = integrate.quad(lambda sp: k.K0013(s, sp)*Im_t13_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        F_minus[j] = integrate.quad(lambda sp: k.K0013(s, sp)*Im_t13_minus_interp(sp), sth+eps, s2, limit=200)[0]
+        F_plus[j] = integrate.quad(lambda sp: k.K2213(s, sp)*Im_t13_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        F_minus[j] = integrate.quad(lambda sp: k.K2213(s, sp)*Im_t13_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
     eval_plus = eval_tochange + F_plus
     eval_minus = eval_tochange + F_minus
@@ -278,12 +265,8 @@ par_s2_1 = t.par_s2_1.copy()
 err_par_s2_1 = t.err_par_s2_1.copy()
 S2_plus = np.zeros(N_pts)
 S2_minus = np.zeros(N_pts)
-STS0_plus = np.zeros(N_pts)
-STS0_minus = np.zeros(N_pts)
 
-eval_tochange = Roy_original - STS0 - S2 + Regge_original
-
-# Change ST because it goes with a00 and a20 --> Ret00(sth) and Ret20(sth)
+eval_tochange = Roy_original - S2 + Regge_original
 
 for i in range(len(par_s2_1)):
     print(counter+i)
@@ -293,23 +276,16 @@ for i in range(len(par_s2_1)):
     par_minus = par_s2_1.copy()
     par_minus[i] -= err_par_s2_1[i]
 
-    t20_plus = lambda s: t.params1_s2.tf(s, par_plus)
-    t20_minus = lambda s: t.params1_s2.tf(s, par_minus)
-
-    a20_plus = t20_plus(sth+1e-6).real
-    a20_minus = t20_minus(sth+1e-6).real
-
-    Im_t20_plus_interp = interp.getInterp(t20_plus, sp_grid)
-    Im_t20_minus_interp = interp.getInterp(t20_minus, sp_grid)
+    Im_t20_plus_interp = interp.getInterp(lambda s: t.params1_s2.tf(s, par_plus), sp_grid)
+    Im_t20_minus_interp = interp.getInterp(lambda s: t.params1_s2.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        S2_plus[j] = integrate.quad(lambda sp: k.K0020(s, sp)*Im_t20_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        S2_minus[j] = integrate.quad(lambda sp: k.K0020(s, sp)*Im_t20_minus_interp(sp), sth+eps, s2, limit=200)[0]
-        STS0_plus[j] = k.ST_S0(s, k.a00_1, a20_plus)
-        STS0_minus[j] = k.ST_S0(s, k.a00_1, a20_minus)
+        S2_plus[j] = integrate.quad(lambda sp: k.K2220(s, sp)*Im_t20_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        S2_minus[j] = integrate.quad(lambda sp: k.K2220(s, sp)*Im_t20_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
-    eval_plus = eval_tochange + S2_plus + STS0_plus
-    eval_minus = eval_tochange + S2_minus + STS0_minus
+
+    eval_plus = eval_tochange + S2_plus
+    eval_minus = eval_tochange + S2_minus
     
     D_plus = eval_plus - param_original
     D_minus = eval_minus - param_original
@@ -338,18 +314,21 @@ for i in range(len(par_d2_1)):
     par_minus = par_d2_1.copy()
     par_minus[i] -= err_par_d2_1[i]
 
-    Im_t22_plus_interp = interp.getInterp(lambda s: t.params1_d2.tf(s, par_plus), sp_grid)
-    Im_t22_minus_interp = interp.getInterp(lambda s: t.params1_d2.tf(s, par_minus), sp_grid)
+    t22_plus = lambda s: t.params1_d2.tf(s, par_plus)
+    t22_minus = lambda s: t.params1_d2.tf(s, par_minus)
+
+    Im_t22_plus_interp = interp.getInterp(t22_plus, sp_grid)
+    Im_t22_minus_interp = interp.getInterp(t22_minus, sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        D2_plus[j] = integrate.quad(lambda sp: k.K0022(s, sp)*Im_t22_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        D2_minus[j] = integrate.quad(lambda sp: k.K0022(s, sp)*Im_t22_minus_interp(sp), sth+eps, s2, limit=200)[0]
+        D2_plus[j] = integrate.quad(lambda sp: k.K2222_cauchy(s, sp)*Im_t22_plus_interp(sp), sth+eps, s2, weight="cauchy", wvar=s, limit=200)[0] + integrate.quad(lambda sp: k.K2222_rest(s, sp)*Im_t22_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        D2_minus[j] = integrate.quad(lambda sp: k.K2222_cauchy(s, sp)*Im_t22_minus_interp(sp), sth+eps, s2, weight="cauchy", wvar=s, limit=200)[0] + integrate.quad(lambda sp: k.K2222_rest(s, sp)*Im_t22_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
     eval_plus = eval_tochange + D2_plus
     eval_minus = eval_tochange + D2_minus
     
-    D_plus = eval_plus - param_original
-    D_minus = eval_minus - param_original
+    D_plus = eval_plus - [t22_plus(s).real for s in x1**2] # New param with +1sigma
+    D_minus = eval_minus - [t22_minus(s).real for s in x1**2] # New param with -1sigma
 
     delta_plus = np.abs(D_plus-D_original)
     delta_minus = np.abs(D_minus-D_original)
@@ -379,8 +358,8 @@ for i in range(len(par_g2_1)):
     Im_t24_minus_interp = interp.getInterp(lambda s: t.params1_g2.tf(s, par_minus), sp_grid)
 
     for (j, s) in enumerate(x1**2):
-        G2_plus[j] = integrate.quad(lambda sp: k.K0024(s, sp)*Im_t24_plus_interp(sp), sth+eps, s2, limit=200)[0]
-        G2_minus[j] = integrate.quad(lambda sp: k.K0024(s, sp)*Im_t24_minus_interp(sp), sth+eps, s2, limit=200)[0]
+        G2_plus[j] = integrate.quad(lambda sp: k.K2224(s, sp)*Im_t24_plus_interp(sp), sth+eps, s2, limit=200)[0]
+        G2_minus[j] = integrate.quad(lambda sp: k.K2224(s, sp)*Im_t24_minus_interp(sp), sth+eps, s2, limit=200)[0]
 
     eval_plus = eval_tochange + G2_plus
     eval_minus = eval_tochange + G2_minus
@@ -411,8 +390,8 @@ for tag in Regge.params_Regge.keys():
     params_Regge_minus[tag] -= Regge.errs_Regge[tag]
 
     for (j, s) in enumerate(x1**2):
-        Regge_plus[j] = Regge.Ret00(s, params_Regge_plus)
-        Regge_minus[j] = Regge.Ret00(s, params_Regge_minus)
+        Regge_plus[j] = Regge.Ret22(s, params_Regge_plus)
+        Regge_minus[j] = Regge.Ret22(s, params_Regge_minus)
     
     eval_plus = eval_tochange + Regge_plus
     eval_minus = eval_tochange + Regge_minus
@@ -449,7 +428,7 @@ plt.fill_between(
 )
 
 plt.xlabel("$\\sqrt{s}$ [GeV]")
-plt.ylabel("Re t00")
+plt.ylabel("Re t22(s)")
 
 plt.legend()
-plt.savefig("S0_err_200.png")
+plt.show()

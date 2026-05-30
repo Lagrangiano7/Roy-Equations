@@ -10,7 +10,7 @@ from Regge import Regge
 ### Calculating Delta_0 = Ret20-Param20 without changing any parameters
 
 eps=1e-6
-N_pts = 30 # number of points we use to evaluate the function. More ==> smoother curve but higher execution time
+N_pts = 50 # number of points we use to evaluate the function. More ==> smoother curve but higher execution time
                                                               # Less than 30 ==> fast but unreliable
 
 
@@ -18,7 +18,7 @@ N_pts = 30 # number of points we use to evaluate the function. More ==> smoother
 
 sp_grid = np.linspace(sth+eps, s2, 400)
 
-# Calculating D0 = param20 - Ret20 (without changing any parameters)
+# Calculating D0 = param00 - Ret00 (without changing any parameters)
 
 x1 = np.linspace(np.sqrt(sth+1e-3), np.sqrt(68)*k.mpi, N_pts) # sqrt(s)
 
@@ -431,15 +431,14 @@ print(np.where(M==0.0))
 
 errs = np.sqrt(np.sum(M**2, axis=0))
 
-up = eval_original + errs
-down = eval_original - errs
+up = param_original + errs
+down = param_original - errs
 
-np.savetxt("S2_bands.txt", np.column_stack([x1, eval_original, [t.t20_1(val).real for val in x1**2] + errs, [t.t20_1(val).real for val in x1**2] - errs]))
 
 # Plotting with error band
 
-plt.plot(x1, eval_original, label="Roy", color="blue")
-plt.plot(x1, param_original, label="Parametrization", color="red")
+plt.plot(x1, eval_original, label="Roy", color="red")
+plt.plot(x1, param_original, label="Parametrization ", color="blue")
 
 plt.fill_between(
     x1,
@@ -451,7 +450,7 @@ plt.fill_between(
 )
 
 plt.xlabel("$\\sqrt{s}$ [GeV]")
-plt.ylabel("Re t20")
+plt.ylabel("Re t20(s)")
 
 plt.legend()
 plt.show()

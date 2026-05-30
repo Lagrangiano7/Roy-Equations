@@ -1,7 +1,7 @@
 # All partial wave parametrizations
 
 import numpy as np
-from kernels import sth
+from kernels import sth, mpi
 import matplotlib.pyplot as plt
 
 import params.s0_global1_opt as params1_s0
@@ -60,7 +60,6 @@ t24_1 = lambda s: params1_g2.tf(s, par_g2_1) # G2
 # K0002, K0004, K0011, K0013, K0020, K0022, K0024
 # D0, G0, P1, F1, S2, D2, G2
 
-waves_1 = np.array([t00_1, t02_1, t04_1, t11_1, t13_1, t20_1, t22_1, t24_1]) # S0, D0, G0, P1, F1, S2, D2, G2
 
 """ import params.s0_global2_opt as params2_s0
 import params.s2_new_b as params2_s2

@@ -74,12 +74,12 @@ def ReT11(s):
             limit=200
             )[0]
     
-    return (STP1(s), KT_contrib, DT_contrib)
+    return (STP1(s)+ KT_contrib+ DT_contrib)
 
 
 # =========================================================
 
-""" x1 = np.linspace(np.sqrt(sth+1e-3), np.sqrt(68)*kernels.mpi, 600)
+x1 = np.linspace(np.sqrt(sth+1e-3), np.sqrt(68)*kernels.mpi, 50)
 
 y_teoLo100 = np.array(list(map(lambda s: ReT11(s**2), x1)))
 y_ReggeHI = np.array(list(map(lambda s: Regge.Ret11(s**2), x1)))
@@ -87,60 +87,11 @@ y_ReggeHI = np.array(list(map(lambda s: Regge.Ret11(s**2), x1)))
 y_teo100 = y_teoLo100 + y_ReggeHI
 y_param = list(map(lambda s: t.t11_1(s**2).real, x1))
 
-raw = np.loadtxt("royp.out")
-
-x = raw[:,0]/1000
-Ret00_Jacobo_disp = raw[:,1]
-Ret00_Jacobo_param = raw[:,2]
-
-plt.plot(x, Ret00_Jacobo_disp, label="Dispersivo Jacobo")
 
 
 plt.plot(x1, y_teo100, label="Roy")
-plt.plot(x1, y_param, label="Parametrización")
+plt.plot(x1, y_param, label="Parametrization")
 plt.xlabel("$\\sqrt{s}$ (GeV)")
 plt.ylabel("Re t11(s)")
 plt.legend()
-plt.show() """
-
-raw = np.loadtxt("fort.41")
-
-E = raw[:,0]/1000
-ST_Jac = raw[:,1]
-KT_Jac = raw[:,2]
-DT_Jac = raw[:,3]
-Regge_Jac = raw[:,4]
-
-ST_Ger = []
-KT_Ger = []
-DT_Ger = []
-
-for val in E:
-    Ger = ReT11(val**2)
-    ST_Ger.append(Ger[0])
-    KT_Ger.append(Ger[1])
-    DT_Ger.append(Ger[2])
-
-Regge_Ger = list(map(lambda s: Regge.Ret11(s**2), E))
-
-with open("P1_Xray.txt", "w") as f:
-    f.write("P WAVE COMPARISON\n\n")
-    f.write("-------------\n")
-    f.write("Subtraction term\n")
-    for i in range(len(E)):
-        f.write(f"{np.round(E[i], 4)}          {ST_Jac[i]}          {ST_Ger[i]}\n")
-    
-    f.write("\n-------------\n")
-    f.write("Kernel contribs (S0 + P + S2)\n")
-    for i in range(len(E)):
-        f.write(f"{np.round(E[i], 4)}          {KT_Jac[i]}          {KT_Ger[i]}\n")
-
-    f.write("\n-------------\n")
-    f.write("Driving term contribs (D0 + G0 + F + D2 + G2)\n")
-    for i in range(len(E)):
-        f.write(f"{np.round(E[i], 4)}          {DT_Jac[i]}          {DT_Ger[i]}\n")
-    
-    f.write("\n-------------\n")
-    f.write("Regge contrib\n")
-    for i in range(len(E)):
-        f.write(f"{np.round(E[i], 4)}          {Regge_Jac[i]}          {Regge_Ger[i]}\n")
+plt.show()
